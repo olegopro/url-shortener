@@ -1,11 +1,45 @@
+package main
+
+import (
+	"log/slog"
+	"os"
+	"url-shortener/internal/config"
+)
+
+const (
+	envLocal = "local"
+	envDev   = "dev"
+	envProd  = "prod"
+)
+
 func main() {
-	// TODO: init config: cleanenv
+	cfg := config.MustLoad()
+
+	log := setupLogger(cfg.Env)
+
+	log.Info("Starting url shortener", slog.String("key", cfg.Env))
+
 
 	// TODO: init logger: slog
 
-	// TODO: init storage
+	// TODO: init storage: sqlite
 
-	// TODO: init router
+	// TODO: init router: chi, render
 
 	// TODO: init server
+}
+
+func setupLogger(env string) *slog.Logger {
+	var log *slog.Logger
+
+	switch env {
+	case envLocal:
+		log = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+
+	case envDev:
+		log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	}
+
+	return log
+
 }
