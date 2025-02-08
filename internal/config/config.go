@@ -23,6 +23,9 @@ type HTTPServer struct {
 func MustLoad() *Config {
 	configPath := os.Getenv("CONFIG_PATH")
 
+	// Вывод значения configPath
+	log.Printf("CONFIG_PATH: %s", configPath)
+
 	if configPath == "" {
 		log.Fatalf("CONFIG_PATH не установлен")
 	}
