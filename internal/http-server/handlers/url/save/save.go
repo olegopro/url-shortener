@@ -8,6 +8,7 @@ import (
 	resp "url-shortener/internal/lib/api/response"
 	"url-shortener/internal/lib/logger/sl"
 	"url-shortener/internal/lib/random"
+	"url-shortener/internal/storage"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
@@ -76,5 +77,33 @@ func New(log *slog.Logger, urlSaver URLSaver) func(http.ResponseWriter, *http.Re
 		if alias == "" {
 			alias = random.NewRandomString(aliasLength)
 		}
+
+		id, err := urlSaver.SaveURL(req.URL, alias)
+		if errors.Is(err, storage.ErrURLExists) {
+			log.Info("URL already exist", slog.String("url", req.URL))
+
+			render.JSON(w, r, resp.Error("URL already exist"))
+
+			return
+		}
+
+		if err != nil {
+			log.Error("Failed to add url", sl.Err(err))
+
+			render.JSON(w, r, resp.Error("Failed to add url"))
+
+			return
+		}
+
+		log.Info("URL added", slog.Int64("id", id))
+
+		responseOK(w, r, alias)
 	}
+}
+
+func responseOK(w http.ResponseWriter, r *http.Request, alias string) {
+	render.JSON(w, r, Response{
+		Response: resp.OK(),
+		Alias:    alias,
+	})
 }
